@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+    <head>
+        <title>처음만든 사이트</title>
+
+        <!-- Required meta tags -->
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <!-- Bootstrap CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+            integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm"
+            crossorigin="anonymous">
+
+        <!-- JS -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+                integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+                crossorigin="anonymous"></script>
+        <!-- 구글폰트 -->
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Hi+Melody&family=Jua&display=swap" rel="stylesheet">        
+   
+        <style type="text/css">
+            * {
+                font-family: 'Hi Melody', cursive;
+                font-family: 'Jua', sans-serif;
+            }
+            h1,
+            h5 {
+                display: inline;
+            }
+
+            .info {
+                margin-top: 20px;
+                margin-bottom: 20px;
+            }
+
+            .review {
+                text-align: center;
+            }
+
+            .reviews {
+                margin-top: 100px;
+            }
+            .wrap {
+                width: 900px;
+                margin: auto;
+            }
+
+            .comment {
+                color: blue;
+                font-weight: bold;
+            }
+
+            #post-box {
+                width: 200px;
+                
+                margin: 20px auto;
+                padding: 50px;
+                border: black solid;
+                border-radius: 5px;
+            }
+
+            .box {
+                width: 50px;
+                background: gray;
+                margin: 10px;
+                padding:20px;
+                border:4px solid gray;
+                border-radius: 10px;
+            }
+        </style>
+
+        <script type = "text/javascript">
+            $(document).ready(function() {
+            $("#reviews-box").html("");
+                    showReview();
+                });
+
+            function makeReview() {
+                let title =$('#input_title').val()
+                let review = $('#input_text').val()
+
+                $.ajax({
+                    type: "POST",
+                    url: "/api/review",
+                    data: {title_give: title,review_give: review},
+                    success: function(response) {
+                        alert(response["msg"]);
+                        window.location.reload();
+                    }
+                })
+            }
+
+            function showReview() {
+                $('')
+
+                $.ajax({
+                    type: "GET",
+                    url: "/api/review",
+                    data: {},
+                    success: function (response){
+                        let reviews = response['all_reviews'];
+                        console.log(reviews);
+                        for (let i =0; i<reviews.length; i++) {
+                            makeCard(reviews[i]["title"], reviews[i]["review"], i);
+                        }
+                    }
+                })
+            }
+
+            function makeCard(title, review, i){
+                let tempHtml = `<div class="card", id="card-${i}">
+                  <div class="card-body">
+                        <p class="card-title">${title}</p>
+                        <p class="card-text">${review}</p>
+                        </div>
+                        <footer class="card-footer">
+                        <button type="button" onclick="open_update('${title}','${review}', ${i})" class="card-footer-item has-text-info">수정</button>
+                    <button type="button" onclick="delete_memo('${title}')" class="card-footer-item has-text-info">삭제</button>  
+                    
+                  </footer>
+                    </div>`;
+                $("#card-list").append(tempHtml);
+            }
+            function delete_memo(title){
+            $.ajax({
+                type: 'POST',
+                url: '/api/delete',
+                data: {title_give:title},
+                success: function (response) {
+                    alert(response['msg']);
+                    window.location.reload()
+                }
+            })
+            }
+            function open_update(title, text, i) {
+                document.getElementById('card-' + i).innerHTML = `<div class="card-body"> \
+                    <textarea class="mod-title" id="mod_input_title" cols="30"  placeholder=${title}></textarea> \
+                    <textarea class="mod-text" id="mod_input_text" cols="30" rows="5" placeholder=${text}></textarea> \
+                    </div> \
+                    <footer class="card-footer"> \
+
+
+                     <button type="button" onclick="edit_memo('${title}', '${text}')" class="card-footer-item has-text-info">저장</button> \
+                    </footer>`  
+            }
+
+            function edit_memo(title, text) {
+                console.log(title)
+                console.log(text)
+
+                let new_title = $('#mod_input_title').val()
+                let new_review = $('#mod_input_text').val()
+                let _title = title
+                let _review = text
+
+                $.ajax({
+                    type: "POST",
+                    url: "/api/edit",
+                    data: {new_title_give:new_title,new_review_give: new_review, title_give:_title, review_give:_review},
+                    success: function (response) {
+                    alert(response["msg"]);
+                    window.location.reload();
+                    }
+                })
+            }       
+            </script>  
+    </head>
+    
+    <body>
+
+              <div class="wrap">
+                <div class="jumbotron">
+                <!--내용-->
+                <h1>나홀로메모장</h1><dive class="box"><font size= "6" color="white">ver2.0</font></dive>
+                <!--제목-->
+                  <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+
+                    </div>
+                    <input type="text" class="form-control" id="input_title" placeholder="제목을 입력하세요">
+                </div>
+                <!--내용-->
+                <div class="input-group mb-3">
+                    <div class="input-group-prepend">
+
+                    </div>
+                    <textarea class="form-control" id="input_text"
+                              cols="30"
+                              rows="5" placeholder="내용을 입력하세요"></textarea>
+                </div>
+                <div class="review">
+                    <button onclick="makeReview()" type="submit" class="btn btn-primary">저장하기</button>
+                </div>
+            </div>
+            <div id="card-list" class="card-columns">
+              <div class="card">
+                 
+                  <div class="card-body">
+
+                      <p class="card-title">첫번째 제목을 입력합니다.</p>
+                      <p class="card-text">첫번째 내용을 입력합니다.</p>
+                  </div>
+                  <footer class="card-footer">
+                    <button type="submit" onclick="open_update('${title}', '${i}')" class="card-footer-item has-text-info">수정</button>
+                    <button type="submit" onclick="delete_memo('${title}')" class="card-footer-item has-text-info">삭제</button>    
+                        
+
+                </footer>
+              </div>
+        </div>
+    </body>
+
+
+</html>
